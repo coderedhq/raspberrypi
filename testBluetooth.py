@@ -1,8 +1,5 @@
-import subprocess, shlex
+import subprocess
 
-def subprocess_cmd(command):
-    process = subprocess.Popen(shlex.split(command), stdout=subprocess.PIPE)
-    proc_stdout = process.communicate()[0].strip()
-    print proc_stdout
-
-subprocess_cmd("sudo bluetoothctl")
+proc = subprocess.Popen("ls", stdout=subprocess.PIPE)
+output = proc.stdout.read()
+print output
