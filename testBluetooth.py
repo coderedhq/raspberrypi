@@ -1,4 +1,4 @@
 import subprocess
 
-p = subprocess.Popen("sudo bluetoothctl");
+p = subprocess.Popen("bluetoothctl");
 print (p)

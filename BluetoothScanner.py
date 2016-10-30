@@ -12,7 +12,7 @@ import bluetooth
 
 nearby_devices = set()
 while True:
-    nearby_devices.update(bluetooth.discover_devices(lookup_names=True))
+    nearby_devices.update(bluetooth.discover_devices(lookup_names=False))
     print("found %d devices" % len(nearby_devices))
     for addr, name in nearby_devices:
         print("  %s - %s" % (addr, name))
