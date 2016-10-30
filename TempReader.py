@@ -18,7 +18,7 @@ LOCK_FILE = 'bluetooth.lck'
 
 def grab_lock():
     while os.path.isfile(LOCK_FILE):
-        time.sleep(1)
+        time.sleep(5)
     lock_file = open(LOCK_FILE, 'w')
     lock_file.write('temp_reader')
     lock_file.close()
