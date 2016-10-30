@@ -1,4 +1,4 @@
-import commands
+import subprocess
 
-all_devices = commands.getstatusoutput("sudo bluetoothctl")
+all_devices = subprocess.check_output("sudo bluetoothctl")
 print(all_devices)
