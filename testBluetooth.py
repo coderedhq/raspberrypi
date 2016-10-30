@@ -1,4 +1,9 @@
-import subprocess as sp
-p = sp.Popen(["bt-device", "--list"], stdin=sp.PIPE, stdout=sp.PIPE, close_fds=True)
-(stdout, stdin) = (p.stdout, p.stdin)
-data = stdout.readlines()
+import os
+import time
+
+while True:
+    os.system("sudo bluetoothctl")
+    os.system("scan on")
+    time.sleep(20)
+    os.system("scan off")
+    os.system("devices > file.txt")
