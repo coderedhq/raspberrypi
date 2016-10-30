@@ -5,4 +5,4 @@ def subprocess_cmd(command):
     proc_stdout = process.communicate()[0].strip()
     print proc_stdout
 
-subprocess_cmd("sudo bluetoothctl; echo b")
+subprocess_cmd("sudo bluetoothctl")
