@@ -9,5 +9,3 @@ with open('sampleList') as f:
     for line in lines:
         identifiers = lines.split('|')
         firebase.post('/rooms/{0}/devices/{1}/'.format(ROOM_ID, identifiers[0]), identifiers[1])
-
-#
