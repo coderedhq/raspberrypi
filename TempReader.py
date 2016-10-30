@@ -1,15 +1,29 @@
-#connect bluetooth device
-#get temperatures
-#read one line for temp
-#write the temp to a file
+import atexit
+import os
+import time
+import sys
 
 import Adafruit_BluefruitLE
 from Adafruit_BluefruitLE.services import UART
-from sys import argv
 
 
 # Get the BLE provider for the current platform.
 ble = Adafruit_BluefruitLE.get_provider()
+
+# Did I Create A lock file?
+lock_file_created = False
+
+# lock file name
+LOCK_FILE = 'bluetooth.lck'
+
+def grab_lock():
+    while os.path.isfile(LOCK_FILE):
+        time.sleep(1)
+    lock_file = open(LOCK_FILE, 'w')
+    lock_file.write('temp_reader')
+    lock_file.close()
+    lock_file_created = True
+
 
 # Main function implements the program logic so it can run in a background
 # thread.  Most platforms require the main thread to handle GUI events and other
@@ -17,76 +31,79 @@ ble = Adafruit_BluefruitLE.get_provider()
 # of automatically though and you just need to provide a main function that uses
 # the BLE provider.
 def main():
-    # Clear any cached data because both bluez and CoreBluetooth have issues with
-    # caching data and it going stale.
+    while True:
+        try:
+            bluetoothDaemon()
+        except Exception as e:
+            print(e)
+            if lock_file_created:
+                os.remove(LOCK_FILE)
+
+def bluetoothDaemon():
+    # Grab lock before doing anything
+    grab_lock()
+
+    # get the default adapter
+    adapter = ble.get_default_adapter()
+    # start the adapter
+    adapter.power_on()
+    
+    # clear cached data
     ble.clear_cached_data()
 
-    # Get the first available BLE network adapter and make sure it's powered on.
-    adapter = ble.get_default_adapter()
-    adapter.power_on()
-    print('Using adapter: {0}'.format(adapter.name))
 
-    # Disconnect any currently connected UART devices.  Good for cleaning up and
-    # starting from a fresh state.
-    print('Disconnecting any connected UART devices...')
+    # disconnect previous connections
     UART.disconnect_devices()
 
-    # Scan for UART devices.
-    print('Searching for UART device...')
-    try:
-        adapter.start_scan()
-        # Search for the first UART device found (will time out after 60 seconds
-        # but you can specify an optional timeout_sec parameter to change it).
-        device = UART.find_device()
-        if device is None:
-            raise RuntimeError('Failed to find UART device!')
-    finally:
-        # Make sure scanning is stopped before exiting.
-        adapter.stop_scan()
+    # start scanning
+    adapter.start_scan()
+    print("Started Scanning")
 
-    print('Connecting to device...')
-    device.connect()  # Will time out after 60 seconds, specify timeout_sec parameter
-                      # to change the timeout.
+    # keep track of known_devices
+    known_devices = set()
+    while True:
+        # get the devices found
+        found = set(UART.find_devices())
+        # get difference between current and known
+        new = found - known_devices
+        # add new to known devices
+        known_devices.update(new)
+        # for each new device
+        for device in new:
+            print("Found {0} - {1}".format(device.name, device.id))
+            # check if the id is the adafruit
+            if device.id == "DE:85:BD:07:6F:29":
+                # if it matches stop scanning
+                adapter.stop_scan()
 
-    # Once connected do everything else in a try/finally to make sure the device
-    # is disconnected when done.
-    try:
-        # Wait for service discovery to complete for the UART service.  Will
-        # time out after 60 seconds (specify timeout_sec parameter to override).
-        print('Discovering services...')
-        UART.discover(device)
-
-        # Once service discovery is complete create an instance of the service
-        # and start interacting with it.
-        uart = UART(device)
-
-        # Write a string to the TX characteristic.
-        uart.write("cmd:get_temp")
-
-        # Now wait up to one minute to receive data from the device.
-        def isFloat(data):
-            try:
-                float(data)
-                return True
-            except ValueError:
-                return False
-
-        received = uart.read(timeout_sec=120)
-        if received is not None:
-            # Received data, print it out.
-            if ':' in received:
-                data = received.split(':')
-                if data[0] == 'temp' and isFloat(data[1]):
-                    targetFile = open('temperature.txt')
-                    targetFile.write(data[1])
-                    targetFile.close()
-        else:
-            # Timeout waiting for data, None is returned.
-            print('Received no data!')
-    finally:
-        # Make sure device is disconnected on exit.
-        device.disconnect()
-
+                # connect to the device
+                device.connect()
+                # check if it has UART capabilities
+                UART.discover(device)
+                # initialize uart object to talk to the device
+                uart = UART(device)
+                # send the temp command
+                uart.write('cmd:temp')
+                # read response
+                received = uart.read(timeout_sec=60)
+                # if response received
+                if received is not None:
+                    # print response
+                    print('Received: {0}'.format(received))
+                    # output to file
+                    outfile = open('current.temp', 'w')
+                    outfile.write(received.split(':')[1])
+                    outfile.close()
+                # disconnect from device
+                UART.disconnect_devices()
+                #device.disconnect()
+                # power down adpater
+                adapter.power_off()
+                # remove lock file
+                os.remove(LOCK_FILE)
+                # sleep
+                time.sleep(60)
+                return
 
 # Initialize the BLE system.  MUST be called before other BLE calls!
 ble.initialize()
