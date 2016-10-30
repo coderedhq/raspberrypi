@@ -7,7 +7,7 @@ LOCK_FILE = 'bluetooth.lck'
 
 # wait for bluetooth.lck to be released
 while os.path.isfile(LOCK_FILE):
-    time.sleep(1)
+    time.sleep(5)
     
 created_lck = False
 try:

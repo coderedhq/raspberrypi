@@ -18,7 +18,7 @@ LOCK_FILE = 'bluetooth.lck'
 
 def grab_lock():
     while os.path.isfile(LOCK_FILE):
-        time.sleep(1)
+        time.sleep(5)
     lock_file = open(LOCK_FILE, 'w')
     lock_file.write('temp_reader')
     lock_file.close()
@@ -38,6 +38,7 @@ def main():
             print(e)
             if lock_file_created:
                 os.remove(LOCK_FILE)
+                lock_file_created = False
 
 def bluetoothDaemon():
     # Grab lock before doing anything
@@ -93,6 +94,8 @@ def bluetoothDaemon():
                     # output to file
                     outfile = open('current.temp', 'w')
                     outfile.write(received.split(':')[1])
+                    outfile.write('\n')
+                    outfile.write(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
                     outfile.close()
                 # disconnect from device
                 UART.disconnect_devices()
@@ -101,6 +104,7 @@ def bluetoothDaemon():
                 adapter.power_off()
                 # remove lock file
                 os.remove(LOCK_FILE)
+                lock_file_created = False
                 # sleep
                 time.sleep(60)
                 return
