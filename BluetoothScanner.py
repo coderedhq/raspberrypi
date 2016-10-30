@@ -10,9 +10,10 @@ for addr, name in nearby_devices:
 
 import bluetooth
 
-while True:
-    nearby_devices = bluetooth.find_service()
-    #nearby_devices = bluetooth.discover_device(lookup_names=True)
-    print("found %d devices" % len(nearby_devices))
-    for addr, name in nearby_devices:
-        print("  %s - %s" % (addr, name))
+nearby_devices = bluetooth.discover_device(lookup_names=True)
+while nearby_devices is None:
+    nearby_devices
+
+print("found %d devices" % len(nearby_devices))
+for addr, name in nearby_devices:
+    print("  %s - %s" % (addr, name))
