@@ -8,7 +8,7 @@ value = temp.read()
 
 # Creates a firebase and adds the temperature value to the firebase database
 f = firebase.FirebaseApplication('https://hacktathon.firebaseio.com/')
-r = requests.get("http://107.170.46.161:3000/api/pi/-KVHaD86FyfI1hIZ6mRV/abcdef")
+r = requests.get("http://107.170.46.161:3000/api/pi/activate/-KVHaD86FyfI1hIZ6mRV/abcdef")
 result = f.put('houses/-KVHaD86FyfI1hIZ6mRV/rooms/abcdef', 'temp', value)
 #print result
 
