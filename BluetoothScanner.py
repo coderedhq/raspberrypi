@@ -10,10 +10,9 @@ for addr, name in nearby_devices:
 
 import bluetooth
 
-nearby_devices = bluetooth.discover_device(lookup_names=True)
-while nearby_devices is None:
-    print("No devices")
-    break
+nearby_devices = bluetooth.discover_devices(lookup_names=True)
+if(nearby_devices is None)
+    print("Nothing is there")
 
 """print("found %d devices" % len(nearby_devices))
 for addr, name in nearby_devices:
