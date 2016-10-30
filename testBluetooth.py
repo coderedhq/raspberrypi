@@ -1,5 +1,5 @@
 import subprocess
 
-proc = subprocess.Popen("ls", stdout=subprocess.PIPE)
+proc = subprocess.Popen("sudo bluetoothctl", stdout=subprocess.PIPE)
 output = proc.stdout.read()
 print output
