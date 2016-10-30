@@ -93,6 +93,8 @@ def bluetoothDaemon():
                     # output to file
                     outfile = open('current.temp', 'w')
                     outfile.write(received.split(':')[1])
+                    outfile.write('\n')
+                    outfile.write(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
                     outfile.close()
                 # disconnect from device
                 UART.disconnect_devices()
