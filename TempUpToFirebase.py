@@ -1,6 +1,5 @@
 from firebase import firebase
 import requests
-import json
 
 # Reads the temperature value from the text file and stores it in value
 temp = open("current.temp", "r")
