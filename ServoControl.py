@@ -6,7 +6,6 @@ import sys
 import Adafruit_BluefruitLE
 from Adafruit_BluefruitLE.services import UART
 
-
 # Get the BLE provider for the current platform.
 ble = Adafruit_BluefruitLE.get_provider()
 
@@ -16,9 +15,10 @@ lock_file_created = False
 # lock file name
 LOCK_FILE = 'bluetooth.lck'
 
+
 def grab_lock():
     while os.path.isfile(LOCK_FILE):
-        time.sleep(5)
+        time.sleep(1)
     lock_file = open(LOCK_FILE, 'w')
     lock_file.write('temp_reader')
     lock_file.close()
@@ -31,16 +31,7 @@ def grab_lock():
 # of automatically though and you just need to provide a main function that uses
 # the BLE provider.
 def main():
-    while True:
-        try:
-            bluetoothDaemon()
-        except Exception as e:
-            print(e)
-            if lock_file_created:
-                os.remove(LOCK_FILE)
-                lock_file_created = False
 
-def bluetoothDaemon():
     # Grab lock before doing anything
     grab_lock()
 
@@ -48,10 +39,9 @@ def bluetoothDaemon():
     adapter = ble.get_default_adapter()
     # start the adapter
     adapter.power_on()
-    
+
     # clear cached data
     ble.clear_cached_data()
-
 
     # disconnect previous connections
     UART.disconnect_devices()
@@ -76,38 +66,35 @@ def bluetoothDaemon():
             if device.id == "DE:85:BD:07:6F:29":
                 # if it matches stop scanning
                 adapter.stop_scan()
-
                 # connect to the device
                 device.connect()
                 # check if it has UART capabilities
                 UART.discover(device)
                 # initialize uart object to talk to the device
                 uart = UART(device)
-                # send the temp command
-                uart.write('cmd:temp')
+                # send the servo command
+                if sys.argv[1] == 'open':
+                    # if response received
+                    uart.write('cmd:open')
+                if sys.argv[1] == 'close':
+                    # if response received
+                    uart.write('cmd:close')
                 # read response
                 received = uart.read(timeout_sec=60)
-                # if response received
                 if received is not None:
                     # print response
                     print('Received: {0}'.format(received))
-                    # output to file
-                    outfile = open('current.temp', 'w')
-                    outfile.write(received.split(':')[1])
-                    outfile.write('\n')
-                    outfile.write(time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime()))
-                    outfile.close()
                 # disconnect from device
                 UART.disconnect_devices()
-                #device.disconnect()
+                # device.disconnect()
                 # power down adpater
                 adapter.power_off()
                 # remove lock file
                 os.remove(LOCK_FILE)
-                lock_file_created = False
                 # sleep
                 time.sleep(60)
                 return
+
 
 # Initialize the BLE system.  MUST be called before other BLE calls!
 ble.initialize()
