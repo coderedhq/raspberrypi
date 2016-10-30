@@ -38,6 +38,7 @@ def main():
             print(e)
             if lock_file_created:
                 os.remove(LOCK_FILE)
+                lock_file_created = False
 
 def bluetoothDaemon():
     # Grab lock before doing anything
@@ -103,6 +104,7 @@ def bluetoothDaemon():
                 adapter.power_off()
                 # remove lock file
                 os.remove(LOCK_FILE)
+                lock_file_created = False
                 # sleep
                 time.sleep(60)
                 return
